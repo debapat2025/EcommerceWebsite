@@ -1,0 +1,7 @@
+debaratiofficial20_db_user
+
+
+mTpx0jn35ipTR5D8
+
+
+MONGO_URI=mongodb+srv://<db_username>:mTpx0jn35ipTR5D8@cluster0.4kft7t4.mongodb.net/
