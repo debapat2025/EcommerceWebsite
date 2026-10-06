@@ -1,3 +1,5 @@
+//this file is for testing the user model and password hashing. It is not part of the application and should not be used in production.
+
 const env = require('./config/env');
 const connectDB = require('./config/db');
 const User = require('./models/user.model');

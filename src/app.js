@@ -5,7 +5,9 @@ const morgan = require('morgan');
 
 const env = require('./config/env');
 const logger = require('./utils/logger');
-const healthRoutes = require('./routes/health.routes');
+//const healthRoutes = require('./routes/health.routes');
+const authRoutes = require('./routes/auth.routes');
+
 const { notFound, errorHandler } = require('./middlewares/error.middleware');
 
 const app = express();
@@ -18,7 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev', { stream: logger.stream }));
 
 // 2. Routes
-app.use(healthRoutes);
+//app.use(healthRoutes);
+app.use('/api/v1/auth', authRoutes);
 app.get("/",(req,res)=>{
     res.send("<h1>Welcome to ecoomerce API</h1>");
 })
