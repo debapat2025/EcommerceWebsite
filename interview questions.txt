@@ -25,3 +25,10 @@ Why return the same error for a wrong email and a wrong password?
 What is a timing attack on login? (If a missing user returns faster than a wrong password, because bcrypt is skipped, an attacker can measure the difference. The fix is to run a dummy bcrypt compare when the user isn't found. Good to mention, though not needed for your project right now.)
 How would you stop brute-force login attempts? (Rate limiting on /login, account lockout after repeated failures. You will add rate limiting later.)
 Difference between authentication (401) and authorization (403).
+
+
+4.How does JWT authentication work step by step? (Login issues a signed token, the client sends it in the header, the server verifies the signature and expiry.)
+What does jwt.verify check, and why not decode?
+Stateless JWT vs checking the database on each request: what is the trade-off? (Speed and scale vs the ability to revoke access immediately.)
+Where should the client store the token? (Access token in memory, refresh token in an httpOnly cookie. You will build the refresh token next.)
+What is the difference between 401 and 403?
