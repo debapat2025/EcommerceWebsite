@@ -1,0 +1,19 @@
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+
+date: 06/10/2026
+
+1.Why bcrypt and not SHA256 or MD5? (salting and a slow, adjustable cost factor)
+Why a short-lived access token?
+What does select: false do?
+Why are the controller and service separate?
+
+
+
+
+
+
+2.Interview points from this step
+
+Why validate in a middleware and not in the controller? (Single responsibility, reusable, controllers stay clean.)
+Mongoose validation vs Joi validation. (Joi checks the request before the database layer. Mongoose is the last line of defence at the model level. Use both.)
+What is mass assignment, and how does stripUnknown prevent it?

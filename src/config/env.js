@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const required = ['MONGO_URI', 'JWT_SECRET_KEY'];
+const required = ['MONGO_URI', 'JWT_SECRET'];
 
 required.forEach((key) => {
   if (!process.env[key]) {
@@ -14,7 +14,7 @@ module.exports = {
   PORT: process.env.PORT || 3000,
   HOST:  process.env.HOST || localhost,
   MONGO_URI: process.env.MONGO_URI,
-  JWT_SECRET_KEY: process.env.JWT_SECRET_KEY,
+  JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '15m',
   CLIENT_URL: process.env.CLIENT_URL,
 };
