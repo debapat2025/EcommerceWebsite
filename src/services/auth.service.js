@@ -20,4 +20,25 @@ const register = async ({ name, email, password }) => {
   return { user};
 };
 
-module.exports = { register };
+
+const login = async ({ email, password }) => {
+  // 1. Find the user. The password has select:false, so we must ask for it explicitly
+  const user = await User.findOne({ email }).select('+password');
+
+  // 2. Same error for "no such user" and "wrong password"
+  if (!user || !(await user.comparePassword(password))) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
+
+  // 3. Only after the password is correct, check the account status
+  if (!user.isActive) {
+    throw new ApiError(403, 'Your account has been deactivated. Please contact support');
+  }
+
+  // 4. Create the access token
+  const accessToken = generateAccessToken(user);
+
+  return { user, accessToken };
+};
+
+module.exports = { register, login };

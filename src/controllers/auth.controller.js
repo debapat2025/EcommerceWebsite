@@ -13,4 +13,17 @@ const register = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { register };
+
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const { user, accessToken } = await authService.login({ email, password });
+
+  res.status(200).json({
+    success: true,
+    message: 'Login successful',
+    data: { user, accessToken },
+  });
+});
+
+module.exports = { register , login };

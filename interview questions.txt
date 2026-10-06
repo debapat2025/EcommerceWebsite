@@ -17,3 +17,11 @@ Why are the controller and service separate?
 Why validate in a middleware and not in the controller? (Single responsibility, reusable, controllers stay clean.)
 Mongoose validation vs Joi validation. (Joi checks the request before the database layer. Mongoose is the last line of defence at the model level. Use both.)
 What is mass assignment, and how does stripUnknown prevent it?
+
+
+
+3.Interview points from this step
+Why return the same error for a wrong email and a wrong password?
+What is a timing attack on login? (If a missing user returns faster than a wrong password, because bcrypt is skipped, an attacker can measure the difference. The fix is to run a dummy bcrypt compare when the user isn't found. Good to mention, though not needed for your project right now.)
+How would you stop brute-force login attempts? (Rate limiting on /login, account lockout after repeated failures. You will add rate limiting later.)
+Difference between authentication (401) and authorization (403).
