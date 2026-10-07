@@ -59,5 +59,23 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
 
-module.exports = { register , login, refreshToken ,logout};
+  const { accessToken, refreshToken } = await authService.changePassword(
+    req.user._id,
+    currentPassword,
+    newPassword
+  );
+
+  setRefreshCookie(res, refreshToken);
+
+  res.status(200).json({
+    success: true,
+    message: 'Password changed successfully',
+    data: { accessToken },
+  });
+});
+
+
+module.exports = { register , login, refreshToken ,logout ,changePassword};

@@ -115,6 +115,32 @@ const logout = async (incomingToken) => {
   );
 };
 
-module.exports = { register, login, refreshAccessToken, logout };
+
+const changePassword = async (userId, currentPassword, newPassword) => {
+  // 1. Load the user WITH the password hash
+  const user = await User.findById(userId).select('+password');
+
+  // 2. Check the current password
+  if (!(await user.comparePassword(currentPassword))) {
+    throw new ApiError(400, 'Current password is incorrect');
+  }
+
+  // 3. Set the new password and use save() so the pre-save hook runs
+  user.password = newPassword;
+  await user.save();
+
+  // 4. Issue fresh tokens for THIS session only
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  await User.updateOne(
+    { _id: user._id },
+    { refreshTokenHash: hashToken(refreshToken) }
+  );
+
+  return { accessToken, refreshToken };
+};
+
+module.exports = { register, login, refreshAccessToken, logout, changePassword };
 
 

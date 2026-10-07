@@ -30,6 +30,11 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new ApiError(403, 'Your account has been deactivated');
   }
 
+    // 4b. Reject tokens that were issued before the last password change
+  if (user.changedPasswordAfter(decoded.iat)) {
+    throw new ApiError(401, 'Password was changed recently. Please log in again');
+  }
+
   // 5. Attach the user to the request so later code can use it
   req.user = user;
   next();

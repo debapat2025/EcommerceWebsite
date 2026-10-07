@@ -24,4 +24,19 @@ const login = {
   }),
 };
 
-module.exports = { register, login };
+
+const changePassword = {
+  body: Joi.object({
+    currentPassword: Joi.string().required(),
+    newPassword: passwordRule
+      .invalid(Joi.ref('currentPassword'))
+      .messages({ 'any.invalid': 'New password must be different from the current password' }),
+    confirmPassword: Joi.any()
+      .valid(Joi.ref('newPassword'))
+      .required()
+      .messages({ 'any.only': 'Passwords do not match' }),
+  }),
+};
+
+module.exports = { register, login, changePassword };
+

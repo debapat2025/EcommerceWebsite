@@ -2,6 +2,7 @@ const express = require('express');
 const validate = require('../middlewares/validate.middleware');
 const authValidator = require('../validators/auth.validator');
 const authController = require('../controllers/auth.controller');
+const { protect } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
@@ -14,6 +15,12 @@ router.post('/register', validate(authValidator.register), authController.regist
 router.post('/login', validate(authValidator.login), authController.login);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
+router.patch(
+  '/change-password',
+  protect,
+  validate(authValidator.changePassword),
+  authController.changePassword
+);
 
 router.post('/login', validate(authValidator.login), (req, res) => {
   res.json({ success: true, message: 'Validation passed', data: req.body });
