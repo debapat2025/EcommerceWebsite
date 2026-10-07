@@ -35,4 +35,21 @@ const protect = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { protect };
+
+
+
+// Usage: restrictTo('admin')  or  restrictTo('admin', 'seller')
+const restrictTo = (...allowedRoles) => (req, res, next) => {
+  // Safety check: protect must have run before this middleware
+  if (!req.user) {
+    return next(new ApiError(401, 'You are not logged in. Please log in to continue'));
+  }
+
+  if (!allowedRoles.includes(req.user.role)) {
+    return next(new ApiError(403, 'You do not have permission to perform this action'));
+  }
+
+  next();
+};
+
+module.exports = { protect, restrictTo };
