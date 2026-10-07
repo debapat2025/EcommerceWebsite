@@ -42,3 +42,10 @@ Why store only a hash of the refresh token and reset tokens?
 Why use two different JWT secrets?
 What does select: false protect against?
 How can you stop a stolen access token after a password change? (The passwordChangedAt check.)
+
+
+2.Why use both an access and a refresh token? Where is each stored, and why?
+Why httpOnly cookie? What attacks does httpOnly, secure and sameSite each prevent?
+What is refresh token rotation and reuse detection?
+Why store a hash of the refresh token in the database? How does that make logout work?
+What is the downside of storing one hash per user, and how would you support many devices?
