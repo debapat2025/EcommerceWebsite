@@ -94,5 +94,27 @@ const refreshAccessToken = async (incomingToken) => {
   return { accessToken, refreshToken };
 };
 
-module.exports = { register, login, refreshAccessToken };
+
+
+const logout = async (incomingToken) => {
+  // No token: nothing to revoke on the server
+  if (!incomingToken) return;
+
+  // Expired or fake token: nothing to revoke, and no need to raise an error
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(incomingToken);
+  } catch (err) {
+    return;
+  }
+
+  // Delete the hash ONLY if it matches the token that was sent
+  await User.updateOne(
+    { _id: decoded.id, refreshTokenHash: hashToken(incomingToken) },
+    { $unset: { refreshTokenHash: 1 } }
+  );
+};
+
+module.exports = { register, login, refreshAccessToken, logout };
+
 

@@ -1,6 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const authService = require('../services/auth.service');
-const { COOKIE_NAME, setRefreshCookie } = require('../utils/cookie');
+const { COOKIE_NAME, setRefreshCookie,clearRefreshCookie } = require('../utils/cookie');
 
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -46,4 +46,18 @@ const refreshToken = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { register , login, refreshToken };
+
+const logout = asyncHandler(async (req, res) => {
+  await authService.logout(req.cookies[COOKIE_NAME]);
+
+  clearRefreshCookie(res);
+
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  });
+});
+
+
+
+module.exports = { register , login, refreshToken ,logout};

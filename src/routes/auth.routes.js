@@ -13,6 +13,7 @@ const router = express.Router();
 router.post('/register', validate(authValidator.register), authController.register);
 router.post('/login', validate(authValidator.login), authController.login);
 router.post('/refresh-token', authController.refreshToken);
+router.post('/logout', authController.logout);
 
 router.post('/login', validate(authValidator.login), (req, res) => {
   res.json({ success: true, message: 'Validation passed', data: req.body });
