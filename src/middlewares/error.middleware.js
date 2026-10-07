@@ -53,7 +53,7 @@ const errorHandler = (err, req, res, next) => {
     success: false,
     message: showRealMessage ? error.message : 'Something went wrong',
     ...(error.errors && error.errors.length > 0 && { errors: error.errors }),
-    ...(env.NODE_ENV === 'development' && { stack: err.stack }),
+    // ...(env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
 

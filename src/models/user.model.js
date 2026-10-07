@@ -39,8 +39,21 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: false, // email verification comes later
     },
+
+    refreshTokenHash: { type: String, select: false },
+
+    emailVerifyToken: { type: String, select: false },
+    emailVerifyExpires: { type: Date, select: false },
+
+    passwordResetToken: { type: String, select: false },
+    passwordResetExpires: { type: Date, select: false },
+
+    passwordChangedAt: { type: Date },
+
   },
-  { timestamps: true } // adds createdAt and updatedAt automatically
+  { timestamps: true },// adds createdAt and updatedAt automatically
+
+  
 );
 
 // Hash the password before saving
@@ -56,11 +69,30 @@ userSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+// True if the password was changed AFTER the token was issued
+userSchema.methods.changedPasswordAfter = function (tokenIssuedAt) {
+  if (!this.passwordChangedAt) return false;
+  return this.passwordChangedAt.getTime() / 1000 > tokenIssuedAt;
+};
+
 
 // Remove sensitive/unneeded fields whenever the user is converted to JSON
+// userSchema.set('toJSON', {
+//   transform: (doc, ret) => {
+//     delete ret.password;
+//     delete ret.__v;
+//     return ret;
+//   },
+// });
+
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.password;
+    delete ret.refreshTokenHash;
+    delete ret.emailVerifyToken;
+    delete ret.emailVerifyExpires;
+    delete ret.passwordResetToken;
+    delete ret.passwordResetExpires;
     delete ret.__v;
     return ret;
   },
