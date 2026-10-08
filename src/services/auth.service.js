@@ -1,8 +1,10 @@
 const User = require('../models/user.model');
 const ApiError = require('../utils/ApiError');
 const { generateAccessToken ,generateRefreshToken,verifyRefreshToken} = require('../utils/token');
-const { hashToken } = require('../utils/cryptoToken');
-
+const { hashToken ,generateRandomToken } = require('../utils/cryptoToken');
+const env = require('../config/env');
+const sendEmail = require('../utils/sendEmail');
+const emailTemplates = require('../utils/emailTemplates');
 
 const register = async ({ name, email, password }) => {
   // 1. Check if the email is already used
@@ -14,10 +16,19 @@ const register = async ({ name, email, password }) => {
   // 2. Create the user (password is hashed by the pre-save hook in the model)
   const user = await User.create({ name, email, password });
 
-//   // 3. Create the access token
+//   // 3. Create the access token ( if just after registration you want to log the user in automatically)
 //   const accessToken = generateAccessToken(user);
 
-  return { user};
+  // The account exists even if the email fails, so do not fail the whole request
+  let emailSent = true;
+  try {
+    await sendVerificationEmail(user);
+  } catch (err) {
+    emailSent = false; // sendEmail already logged the real reason
+  }
+
+
+  return { user, emailSent };
 };
 
 
@@ -33,6 +44,14 @@ const login = async ({ email, password }) => {
   // 3. Only after the password is correct, check the account status
   if (!user.isActive) {
     throw new ApiError(403, 'Your account has been deactivated. Please contact support');
+  }
+
+    if (!user.isActive) {
+    throw new ApiError(403, 'Your account has been deactivated. Please contact support');
+  }
+
+  if (!user.isVerified) {
+    throw new ApiError(403, 'Please verify your email before logging in');
   }
 
   // 4. Create the access token and refresh token. The access token is sent to the client, while the refresh token is stored in the database (hashed) and sent as a cookie.
@@ -141,6 +160,65 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   return { accessToken, refreshToken };
 };
 
-module.exports = { register, login, refreshAccessToken, logout, changePassword };
+
+
+
+const VERIFY_EXPIRES_MS = 24 * 60 * 60 * 1000; // keep in sync with the email text (24 hours)
+
+const sendVerificationEmail = async (user) => {
+  const { token, hashedToken } = generateRandomToken();
+
+  await User.updateOne(
+    { _id: user._id },
+    { emailVerifyToken: hashedToken, emailVerifyExpires: new Date(Date.now() + VERIFY_EXPIRES_MS) }
+  );
+
+  const url = `${env.API_URL}/api/v1/auth/verify-email/${token}`;
+
+  try {
+    await sendEmail({ to: user.email, ...emailTemplates.verifyEmail({ name: user.name, url }) });
+  } catch (err) {
+    // The email never left, so the stored token is useless. Remove it.
+    await User.updateOne(
+      { _id: user._id },
+      { $unset: { emailVerifyToken: 1, emailVerifyExpires: 1 } }
+    );
+    throw err;
+  }
+};
+
+
+
+
+const verifyEmail = async (token) => {
+  // One atomic step: find a valid token AND mark verified AND delete the token.
+  // Two quick clicks cannot both succeed.
+  const user = await User.findOneAndUpdate(
+    { emailVerifyToken: hashToken(token), emailVerifyExpires: { $gt: new Date() } },
+    { $set: { isVerified: true }, $unset: { emailVerifyToken: 1, emailVerifyExpires: 1 } },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError(400, 'Verification link is invalid or has expired');
+  }
+};
+
+const resendVerification = async (email) => {
+  const user = await User.findOne({ email });
+
+  // Send only for real, unverified, active accounts. Otherwise do nothing silently.
+  if (user && user.isActive && !user.isVerified) {
+    try {
+      await sendVerificationEmail(user);
+    } catch (err) {
+      // Logged already. The response must look the same either way.
+    }
+  }
+};
+
+
+
+module.exports = { register, login, refreshAccessToken, logout, changePassword, verifyEmail, resendVerification };
 
 

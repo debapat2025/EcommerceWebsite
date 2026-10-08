@@ -5,12 +5,38 @@ const { COOKIE_NAME, setRefreshCookie,clearRefreshCookie } = require('../utils/c
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  const { user } = await authService.register({ name, email, password });
+  const { user ,emailSent} = await authService.register({ name, email, password });
 
-  res.status(201).json({
+  // res.status(201).json({
+  //   success: true,
+  //   message: 'Registration successful. Please log in.',
+  //   data: { user },
+  // });
+    res.status(201).json({
     success: true,
-    message: 'Registration successful. Please log in.',
+    message: emailSent
+      ? 'Registration successful. Please check your email to verify your account.'
+      : 'Registration successful, but we could not send the verification email. Please request a new one.',
     data: { user },
+  });
+});
+
+
+const verifyEmail = asyncHandler(async (req, res) => {
+  await authService.verifyEmail(req.params.token);
+
+  res.status(200).json({
+    success: true,
+    message: 'Email verified successfully. You can now log in.',
+  });
+});
+
+const resendVerification = asyncHandler(async (req, res) => {
+  await authService.resendVerification(req.body.email);
+
+  res.status(200).json({
+    success: true,
+    message: 'If an unverified account exists for that email, a new verification link has been sent.',
   });
 });
 
@@ -78,4 +104,4 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 
-module.exports = { register , login, refreshToken ,logout ,changePassword};
+module.exports = { register , login, refreshToken ,logout ,changePassword , verifyEmail, resendVerification};

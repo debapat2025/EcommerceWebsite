@@ -38,5 +38,19 @@ const changePassword = {
   }),
 };
 
-module.exports = { register, login, changePassword };
+
+const verifyEmail = {
+  params: Joi.object({
+    token: Joi.string().hex().length(64).required(),
+  }),
+};
+
+const resendVerification = {
+  body: Joi.object({
+    email: Joi.string().trim().lowercase().email().required(),
+  }),
+};
+
+module.exports = { register, login, changePassword, verifyEmail, resendVerification };
+
 

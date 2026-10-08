@@ -76,6 +76,9 @@ userSchema.methods.changedPasswordAfter = function (tokenIssuedAt) {
 };
 
 
+userSchema.index({ emailVerifyToken: 1 }, { sparse: true });
+userSchema.index({ passwordResetToken: 1 }, { sparse: true });
+
 // Remove sensitive/unneeded fields whenever the user is converted to JSON
 // userSchema.set('toJSON', {
 //   transform: (doc, ret) => {

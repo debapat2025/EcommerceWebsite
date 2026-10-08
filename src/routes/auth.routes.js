@@ -26,4 +26,11 @@ router.post('/login', validate(authValidator.login), (req, res) => {
   res.json({ success: true, message: 'Validation passed', data: req.body });
 });
 
+router.get('/verify-email/:token', validate(authValidator.verifyEmail), authController.verifyEmail);
+router.post(
+  '/resend-verification',
+  validate(authValidator.resendVerification),
+  authController.resendVerification
+);
+
 module.exports = router;
