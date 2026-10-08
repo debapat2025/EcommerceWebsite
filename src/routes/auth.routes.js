@@ -33,4 +33,15 @@ router.post(
   authController.resendVerification
 );
 
+
+router.post(
+  '/forgot-password',
+  validate(authValidator.forgotPassword),
+  authController.forgotPassword
+);
+router.patch(
+  '/reset-password/:token',
+  validate(authValidator.resetPassword),
+  authController.resetPassword
+);
 module.exports = router;

@@ -165,6 +165,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 
 const VERIFY_EXPIRES_MS = 24 * 60 * 60 * 1000; // keep in sync with the email text (24 hours)
 
+//at time of registraion and resend email verification link
 const sendVerificationEmail = async (user) => {
   const { token, hashedToken } = generateRandomToken();
 
@@ -219,6 +220,66 @@ const resendVerification = async (email) => {
 
 
 
-module.exports = { register, login, refreshAccessToken, logout, changePassword, verifyEmail, resendVerification };
+//forget and reset password
+const RESET_EXPIRES_MS = 15 * 60 * 1000; // keep in sync with the email text (15 minutes)
+
+const forgotPassword = async (email) => {
+  const user = await User.findOne({ email });
+
+  // Unknown or blocked account: do nothing, and the caller cannot tell
+  if (!user || !user.isActive) return;
+
+  const { token, hashedToken } = generateRandomToken();
+
+  await User.updateOne(
+    { _id: user._id },
+    {
+      passwordResetToken: hashedToken,
+      passwordResetExpires: new Date(Date.now() + RESET_EXPIRES_MS),
+    }
+  );
+
+  // The link opens the FRONTEND reset page, which then calls the reset API
+  const url = `${env.API_URL}/api/v1/auth/reset-password/${token}`;
+
+  try {
+    await sendEmail({ to: user.email, ...emailTemplates.resetPassword({ name: user.name, url }) });
+  } catch (err) {
+    // The email never left, so the stored token is useless. Remove it.
+    // sendEmail already logged the real reason, and the response stays the same.
+    await User.updateOne(
+      { _id: user._id },
+      { $unset: { passwordResetToken: 1, passwordResetExpires: 1 } }
+    );
+  }
+};
+
+const resetPassword = async (token, newPassword) => {
+  // 1. Claim the token atomically: find a valid one AND delete it in ONE operation.
+  //    Two requests with the same link cannot both succeed.
+  const user = await User.findOneAndUpdate(
+    {
+      passwordResetToken: hashToken(token),
+      passwordResetExpires: { $gt: new Date() },
+      isActive: true,
+    },
+    { $unset: { passwordResetToken: 1, passwordResetExpires: 1 } },
+    { new: true }
+  );
+
+  if (!user) {
+    throw new ApiError(400, 'Reset link is invalid or has expired');
+  }
+
+  // 2. Set the new password with save(), so the pre-save hook hashes it
+  //    and sets passwordChangedAt
+  user.password = newPassword;
+  await user.save();
+
+  // 3. End every old session: the stored refresh token hash is deleted
+  await User.updateOne({ _id: user._id }, { $unset: { refreshTokenHash: 1 } });
+};
+
+module.exports = { register, login, refreshAccessToken, logout, changePassword, verifyEmail, resendVerification, forgotPassword, resetPassword };
 
 

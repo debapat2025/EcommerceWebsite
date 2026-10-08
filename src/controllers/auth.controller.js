@@ -104,4 +104,28 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 
-module.exports = { register , login, refreshToken ,logout ,changePassword , verifyEmail, resendVerification};
+//forget and rest password
+const forgotPassword = asyncHandler(async (req, res) => {
+  await authService.forgotPassword(req.body.email);
+
+  res.status(200).json({
+    success: true,
+    message: 'If an account exists for that email, a password reset link has been sent.',
+  });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  await authService.resetPassword(req.params.token, req.body.password);
+
+  clearRefreshCookie(res); // remove any old session cookie in this browser
+
+  res.status(200).json({
+    success: true,
+    message: 'Password reset successful. Please log in with your new password.',
+  });
+});
+
+module.exports = {
+  register, login, refreshToken, logout, changePassword,
+  verifyEmail, resendVerification, forgotPassword, resetPassword,
+};

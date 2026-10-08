@@ -51,6 +51,30 @@ const resendVerification = {
   }),
 };
 
-module.exports = { register, login, changePassword, verifyEmail, resendVerification };
+
+const forgotPassword = {
+  body: Joi.object({
+    email: Joi.string().trim().lowercase().email().required(),
+  }),
+};
+
+const resetPassword = {
+  params: Joi.object({
+    token: Joi.string().hex().length(64).required(),
+  }),
+  body: Joi.object({
+    password: passwordRule,
+    confirmPassword: Joi.any()
+      .valid(Joi.ref('password'))
+      .required()
+      .messages({ 'any.only': 'Passwords do not match' }),
+  }),
+};
+
+module.exports = {
+  register, login, changePassword, verifyEmail, resendVerification,
+  forgotPassword, resetPassword,
+};
+
 
 
