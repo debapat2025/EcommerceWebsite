@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser')
-
+const { apiLimiter } = require('./middlewares/rateLimit.middleware');
 const env = require('./config/env');
 const logger = require('./utils/logger');
 //const healthRoutes = require('./routes/health.routes');
@@ -21,8 +21,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev', { stream: logger.stream }));
 
+
+// Behind Nginx, Render, Railway etc., the real client IP is in a header.
+// Without this, EVERY user looks like one IP and shares one limit.
+if (env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+
+
+
+
 // 2. Routes
 //app.use(healthRoutes);
+app.use('/api', apiLimiter);                 // limit everything under /api
 app.use('/api/v1/auth', authRoutes);
 app.get("/",(req,res)=>{
     res.send("<h1>Welcome to ecoomerce API</h1>");

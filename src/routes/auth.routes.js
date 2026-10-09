@@ -3,6 +3,9 @@ const validate = require('../middlewares/validate.middleware');
 const authValidator = require('../validators/auth.validator');
 const authController = require('../controllers/auth.controller');
 const { protect } = require('../middlewares/auth.middleware');
+const {
+  loginLimiter, emailLimiter, registerLimiter,
+} = require('../middlewares/rateLimit.middleware');
 
 const router = express.Router();
 
@@ -11,8 +14,8 @@ const router = express.Router();
 //   res.json({ success: true, message: 'Validation passed', data: req.body });
 // });
 
-router.post('/register', validate(authValidator.register), authController.register);
-router.post('/login', validate(authValidator.login), authController.login);
+router.post('/register', registerLimiter, validate(authValidator.register), authController.register);
+router.post('/login', loginLimiter, validate(authValidator.login), authController.login);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
 router.patch(
@@ -22,20 +25,21 @@ router.patch(
   authController.changePassword
 );
 
-router.post('/login', validate(authValidator.login), (req, res) => {
-  res.json({ success: true, message: 'Validation passed', data: req.body });
-});
+// router.post('/login', validate(authValidator.login), (req, res) => {
+//   res.json({ success: true, message: 'Validation passed', data: req.body });
+// });
 
 router.get('/verify-email/:token', validate(authValidator.verifyEmail), authController.verifyEmail);
 router.post(
   '/resend-verification',
+  emailLimiter,
   validate(authValidator.resendVerification),
   authController.resendVerification
 );
 
 
 router.post(
-  '/forgot-password',
+  '/forgot-password', emailLimiter,
   validate(authValidator.forgotPassword),
   authController.forgotPassword
 );
