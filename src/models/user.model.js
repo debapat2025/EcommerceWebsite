@@ -39,7 +39,15 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: false, // email verification comes later
     },
-
+    phone: {
+      type: String,
+      trim: true,
+      match: [/^[6-9]\d{9}$/, 'Please provide a valid 10 digit mobile number'],
+    },
+    avatar: {
+      type: String,
+      trim: true,
+    },
     refreshTokenHash: { type: String, select: false },
 
     emailVerifyToken: { type: String, select: false },
