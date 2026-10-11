@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require('bcryptjs');
-
+const env = require('../config/env');
+const path = require('path');
 
 const userSchema = new mongoose.Schema({
 
@@ -84,6 +85,13 @@ userSchema.methods.changedPasswordAfter = function (tokenIssuedAt) {
 };
 
 
+// avatarUrl is not stored in the database. It is created whenever the user is sent as JSON
+userSchema.virtual('avatarUrl').get(function () {
+  if (!this.avatar) return null;
+  // basename keeps only the file name, so old records saved as "/uploads/avatars/x.png" also work
+  return `${env.API_URL}/uploads/avatars/${path.basename(this.avatar)}`;
+});
+
 userSchema.index({ emailVerifyToken: 1 }, { sparse: true });
 userSchema.index({ passwordResetToken: 1 }, { sparse: true });
 
@@ -96,7 +104,10 @@ userSchema.index({ passwordResetToken: 1 }, { sparse: true });
 //   },
 // });
 
+
+
 userSchema.set('toJSON', {
+  virtuals: true,
   transform: (doc, ret) => {
     delete ret.password;
     delete ret.refreshTokenHash;
@@ -104,10 +115,10 @@ userSchema.set('toJSON', {
     delete ret.emailVerifyExpires;
     delete ret.passwordResetToken;
     delete ret.passwordResetExpires;
+    delete ret.id;   // the extra copy of _id that virtuals add
     delete ret.__v;
     return ret;
   },
 });
-
 
 module.exports = mongoose.model("User",userSchema)

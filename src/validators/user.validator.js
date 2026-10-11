@@ -7,7 +7,7 @@ const updateMe = {
       .trim()
       .pattern(/^[6-9]\d{9}$/)
       .messages({ 'string.pattern.base': 'Phone must be a valid 10 digit mobile number' }),
-  }).min(1),
+  })
 };
 
 module.exports = { updateMe };

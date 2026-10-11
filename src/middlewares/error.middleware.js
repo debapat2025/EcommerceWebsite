@@ -24,6 +24,12 @@ const handleValidationError = (err) => {
   return new ApiError(400, 'Validation failed', errors);
 };
 
+const handleMulterError = (err) => {
+  if (err.code === 'LIMIT_FILE_SIZE') return new ApiError(413, 'File is too large. Maximum size is 2 MB');
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') return new ApiError(400, 'Wrong field name. Use "avatar" for the image');
+  return new ApiError(400, err.message);
+};
+
 // Global error handler: must have 4 parameters and be registered LAST
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
@@ -36,6 +42,7 @@ const errorHandler = (err, req, res, next) => {
     error = new ApiError(401, 'Invalid token. Please log in again');
   else if (err.name === 'TokenExpiredError')
     error = new ApiError(401, 'Token expired. Please log in again');
+    else if (err.name === 'MulterError') error = handleMulterError(err);
 
   const statusCode = error.statusCode || 500;
   const isOperational = error.isOperational === true;

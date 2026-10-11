@@ -11,8 +11,8 @@ const getMe = asyncHandler(async (req, res) => {
 
 const updateMe = asyncHandler(async (req, res) => {
     console.log('Request body:', req.body);
-  console.log('Authenticated user ID:', req.user?._id);
-  const user = await userService.updateMe(req.user._id, req.body);
+  console.log('Authenticated user ID:', req.user._id);
+  const user = await userService.updateMe(req.user._id, req.body, req.file);
 
   res.status(200).json({
     success: true,

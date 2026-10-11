@@ -37,6 +37,7 @@ const validate = (schemas) => (req, res, next) => {
   });
 
   if (errors.length > 0) {
+    if (req.file) fs.unlink(req.file.path, () => {}); // remove the saved picture
     return next(new ApiError(400, 'Validation failed', errors));
   }
 

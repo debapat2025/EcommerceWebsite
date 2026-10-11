@@ -10,6 +10,7 @@ const logger = require('./utils/logger');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const { notFound, errorHandler } = require('./middlewares/error.middleware');
+const path = require('path');
 
 const app = express();
 
@@ -28,6 +29,15 @@ if (env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
+// 2. Share the uploaded pictures: BEFORE the routes and BEFORE notFound
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin'); // lets your frontend show the images
+    next();
+  },
+  express.static(path.join(__dirname, '../uploads'))
+);
 
 
 
