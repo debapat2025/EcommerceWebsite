@@ -106,4 +106,45 @@ const deactivateMe = async (userId, password) => {
   );
 };
 
-module.exports = { updateMe, deactivateMe };
+
+
+// now it is for usser addresses
+const MAX_ADDRESSES = 5;
+// Load the user, or stop with a 404
+const getUser = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, 'User not found');
+  return user;
+};
+
+
+const getAddresses = async (userId) => {
+  const user = await getUser(userId);
+  return user.addresses;
+};
+
+
+
+
+const addAddress = async (userId, data) => {
+  const user = await getUser(userId);
+
+  if (user.addresses.length >= MAX_ADDRESSES) {
+    throw new ApiError(400, `You can save up to ${MAX_ADDRESSES} addresses`);
+  }
+
+  // The first address is always the default. Otherwise only if the user asked for it
+  const makeDefault = user.addresses.length === 0 || data.isDefault === true;
+
+  if (makeDefault) {
+    user.addresses.forEach((a) => { a.isDefault = false; }); // only one default allowed
+  }
+
+  user.addresses.push({ ...data, isDefault: makeDefault });
+  await user.save();
+
+  return user.addresses;
+};
+
+
+module.exports = { updateMe, deactivateMe, getUser, getAddresses, addAddress };

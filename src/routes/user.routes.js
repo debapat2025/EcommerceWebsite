@@ -5,6 +5,7 @@ const validate = require('../middlewares/validate.middleware');
 const userValidator = require('../validators/user.validator');
 const { uploadAvatar } = require('../middlewares/upload.middleware');
 const router = express.Router();
+const commonValidator = require('../validators/common.validator');
 
 router.get('/me', protect, userController.getMe);
 // router.patch('/me', protect, validate(userValidator.updateMe), userController.updateMe);
@@ -16,5 +17,14 @@ router.patch(
   userController.updateMe
 );
 router.delete('/me', protect, validate(userValidator.deactivateMe), userController.deactivateMe);
+
+router.get('/me/addresses', protect, userController.getAddresses);
+
+router.post(
+  '/me/addresses',
+  protect,
+  validate(userValidator.address),
+  userController.addAddress
+);
 
 module.exports = router;

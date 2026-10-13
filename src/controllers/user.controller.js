@@ -34,4 +34,17 @@ const deactivateMe = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { getMe, updateMe, deactivateMe };
+
+
+//address
+const getAddresses = asyncHandler(async (req, res) => {
+  const addresses = await userService.getAddresses(req.user._id);
+  res.status(200).json({ success: true, message: 'Addresses fetched', data: { addresses } });
+});
+
+const addAddress = asyncHandler(async (req, res) => {
+  const addresses = await userService.addAddress(req.user._id, req.body);
+  res.status(201).json({ success: true, message: 'Address added', data: { addresses } });
+});
+
+module.exports = { getMe, updateMe, deactivateMe, getAddresses, addAddress };
