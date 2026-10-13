@@ -72,4 +72,38 @@ const updateMe = async (userId, data = {}, file) => {
   return user;
 };
 
-module.exports = { updateMe };
+
+
+
+
+const deactivateMe = async (userId, password) => {
+  // The password has select:false, so we must ask for it
+  const user = await User.findById(userId).select('+password');
+  if (!user) throw new ApiError(404, 'User not found');
+
+  // 1. Is the password correct?
+  if (!(await user.comparePassword(password))) {
+    throw new ApiError(400, 'Password is incorrect');
+  }
+
+  // 2. Do not let the LAST admin switch themselves off
+  if (user.role === 'admin') {
+    const otherAdmins = await User.countDocuments({
+      role: 'admin',
+      isActive: true,
+      _id: { $ne: user._id },   // "$ne" means "not equal": count admins other than me
+    });
+
+    if (otherAdmins === 0) {
+      throw new ApiError(400, 'You are the only active admin. Make another user an admin first');
+    }
+  }
+
+  // 3. Switch the account off and remove the refresh token
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { isActive: false }, $unset: { refreshTokenHash: 1 } }
+  );
+};
+
+module.exports = { updateMe, deactivateMe };

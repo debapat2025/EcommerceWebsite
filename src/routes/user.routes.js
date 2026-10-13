@@ -15,6 +15,6 @@ router.patch(
   validate(userValidator.updateMe), // 3. check name and phone
   userController.updateMe
 );
-
+router.delete('/me', protect, validate(userValidator.deactivateMe), userController.deactivateMe);
 
 module.exports = router;

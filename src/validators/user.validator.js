@@ -8,6 +8,15 @@ const updateMe = {
       .pattern(/^[6-9]\d{9}$/)
       .messages({ 'string.pattern.base': 'Phone must be a valid 10 digit mobile number' }),
   })
+
+  
 };
 
-module.exports = { updateMe };
+const deactivateMe = {
+  body: Joi.object({
+    password: Joi.string().required(),
+  }),
+};
+
+module.exports = { updateMe, deactivateMe };
+
