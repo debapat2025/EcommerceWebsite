@@ -147,4 +147,61 @@ const addAddress = async (userId, data) => {
 };
 
 
-module.exports = { updateMe, deactivateMe, getUser, getAddresses, addAddress };
+
+const updateAddress = async (userId, addressId, data) => {
+  const user = await getUser(userId);
+
+  const address = user.addresses.id(addressId); // find one address inside the list
+  if (!address) throw new ApiError(404, 'Address not found');
+
+  const { isDefault, ...fields } = data;
+  address.set(fields); // update the fields that were sent
+
+  if (isDefault === true) {
+    user.addresses.forEach((a) => { a.isDefault = false; });
+    address.isDefault = true;
+  }
+
+  await user.save();
+  return user.addresses;
+};
+
+
+const deleteAddress = async (userId, addressId) => {
+  const user = await getUser(userId);
+
+  const address = user.addresses.id(addressId);
+  if (!address) throw new ApiError(404, 'Address not found');
+
+  const wasDefault = address.isDefault;
+  user.addresses.pull(addressId); // remove it from the list
+
+  // If we deleted the default, make the first remaining address the default
+  if (wasDefault && user.addresses.length > 0) {
+    user.addresses[0].isDefault = true;
+  }
+
+  await user.save();
+  return user.addresses;
+};
+
+
+const setDefaultAddress = async (userId, addressId) => {
+  const user = await getUser(userId);
+
+  const address = user.addresses.id(addressId); // the address the user chose
+  if (!address) throw new ApiError(404, 'Address not found');
+
+  // Step 1: set ALL addresses to false
+  user.addresses.forEach((a) => {
+    a.isDefault = false;
+  });
+
+  // Step 2: set the chosen one to true
+  address.isDefault = true;
+
+  await user.save();
+  return user.addresses;
+};
+
+module.exports = { updateMe, deactivateMe, getUser, getAddresses, addAddress, updateAddress, deleteAddress, setDefaultAddress };

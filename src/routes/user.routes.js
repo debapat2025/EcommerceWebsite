@@ -27,4 +27,27 @@ router.post(
   userController.addAddress
 );
 
+router.put(
+  '/me/addresses/:addressId',
+  protect,
+  validate({ ...commonValidator.idParams('addressId'), ...userValidator.address }),
+  userController.updateAddress
+);
+
+
+router.delete(
+  '/me/addresses/:addressId',
+  protect,
+  validate(commonValidator.idParams('addressId')),
+  userController.deleteAddress
+);
+
+
+router.patch(
+  '/me/addresses/:addressId/default',
+  protect,
+  validate(commonValidator.idParams('addressId')),
+  userController.setDefaultAddress
+);
+
 module.exports = router;

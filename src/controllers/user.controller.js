@@ -47,4 +47,19 @@ const addAddress = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, message: 'Address added', data: { addresses } });
 });
 
-module.exports = { getMe, updateMe, deactivateMe, getAddresses, addAddress };
+
+const updateAddress = asyncHandler(async (req, res) => {
+  const addresses = await userService.updateAddress(req.user._id, req.params.addressId, req.body);
+  res.status(200).json({ success: true, message: 'Address updated', data: { addresses } });
+});
+
+const deleteAddress = asyncHandler(async (req, res) => {
+  const addresses = await userService.deleteAddress(req.user._id, req.params.addressId);
+  res.status(200).json({ success: true, message: 'Address deleted', data: { addresses } });
+});
+
+const setDefaultAddress = asyncHandler(async (req, res) => {
+  const addresses = await userService.setDefaultAddress(req.user._id, req.params.addressId);
+  res.status(200).json({ success: true, message: 'Default address updated', data: { addresses } });
+});
+module.exports = { getMe, updateMe, deactivateMe, getAddresses, addAddress, updateAddress, setDefaultAddress ,deleteAddress};
