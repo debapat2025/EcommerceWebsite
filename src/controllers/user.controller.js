@@ -61,5 +61,47 @@ const deleteAddress = asyncHandler(async (req, res) => {
 const setDefaultAddress = asyncHandler(async (req, res) => {
   const addresses = await userService.setDefaultAddress(req.user._id, req.params.addressId);
   res.status(200).json({ success: true, message: 'Default address updated', data: { addresses } });
+
 });
-module.exports = { getMe, updateMe, deactivateMe, getAddresses, addAddress, updateAddress, setDefaultAddress ,deleteAddress};
+
+const getUsers = asyncHandler(async (req, res) => {
+  const { users, meta } = await userService.getUsers(req.query);
+
+  res.status(200).json({
+    success: true,
+    message: 'Users fetched',
+    data: { users },
+    meta,                 // total, page, limit, totalPages, ...
+  });
+});
+
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await userService.getUserById(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: 'User fetched',
+    data: { user },
+  });
+});
+
+const updateUserRole = asyncHandler(async (req, res) => {
+  const user = await userService.updateUserRole(req.user, req.params.id, req.body.role);
+
+  res.status(200).json({
+    success: true,
+    message: 'User role updated',
+    data: { user },
+  });
+});
+
+const updateUserStatus = asyncHandler(async (req, res) => {
+  const user = await userService.updateUserStatus(req.user, req.params.id, req.body.isActive);
+
+  res.status(200).json({
+    success: true,
+    message: req.body.isActive ? 'User unblocked' : 'User blocked',
+    data: { user },
+  });
+});
+module.exports = { getMe, updateMe, deactivateMe, getAddresses, addAddress, updateAddress, setDefaultAddress ,deleteAddress, getUsers, getUserById , updateUserRole , updateUserStatus};

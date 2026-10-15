@@ -28,38 +28,72 @@ const run = async () => {
   await connectDB();
 
   // 2. Does this email already exist?
-  const existing = await User.findOne({ email: value.email });
+  // const existing = await User.findOne({ email: value.email });
 
-  if (existing) {
-    if (existing.role === 'admin') {
-      console.log(`Admin already exists: ${existing.email}. Nothing changed.`);
-      return 0;
-    }
+  // if (existing) {
+  //   if (existing.role === 'admin') {
+  //     console.log(`Admin already exists: ${existing.email}. Nothing changed.`);
+  //     return 0;
+  //   }
 
-    if (!promote) {
-      console.error(`${existing.email} already exists as a normal user. Nothing changed.`);
-      console.error('To make this user an admin, run: npm run seed:admin -- --promote');
-      return 1;
-    }
+  //   if (!promote) {
+  //     console.error(`${existing.email} already exists as a normal user. Nothing changed.`);
+  //     console.error('To make this user an admin, run: npm run seed:admin -- --promote');
+  //     return 1;
+  //   }
 
-    await User.updateOne({ _id: existing._id }, { role: 'admin', isVerified: true });
-    console.log(`${existing.email} is now an admin.`);
-    if (!existing.isActive) {
-      console.warn('Warning: this account is deactivated and cannot log in.');
-    }
+  //   await User.updateOne({ _id: existing._id }, { role: 'admin', isVerified: true });
+  //   console.log(`${existing.email} is now an admin.`);
+  //   if (!existing.isActive) {
+  //     console.warn('Warning: this account is deactivated and cannot log in.');
+  //   }
+  //   return 0;
+  // }
+
+  // // 3. Create the admin (the pre-save hook hashes the password)
+  // await User.create({
+  //   name: value.name,
+  //   email: value.email,
+  //   password: value.password,
+  //   role: 'admin',
+  //   isVerified: true,
+  // });
+
+  // console.log(`Admin created: ${value.email}`);
+  // return 0;
+
+    // 1. Only ONE super admin is allowed
+  const mainAdmin = await User.findOne({ role: 'superadmin' });
+  if (mainAdmin) {
+    console.log(`Main admin already exists: ${mainAdmin.email}. Nothing changed.`);
     return 0;
   }
 
-  // 3. Create the admin (the pre-save hook hashes the password)
+  // 2. Is this email already a normal user or sub-admin?
+  const existing = await User.findOne({ email: value.email });
+
+  if (existing) {
+    if (!promote) {
+      console.error(`${existing.email} already exists. Nothing changed.`);
+      console.error('To make this user the main admin, run: npm run seed:admin -- --promote');
+      return 1;
+    }
+
+    await User.updateOne({ _id: existing._id }, { role: 'superadmin', isVerified: true });
+    console.log(`${existing.email} is now the main admin.`);
+    return 0;
+  }
+
+  // 3. Create the main admin (the model hashes the password)
   await User.create({
     name: value.name,
     email: value.email,
     password: value.password,
-    role: 'admin',
+    role: 'superadmin',
     isVerified: true,
   });
 
-  console.log(`Admin created: ${value.email}`);
+  console.log(`Main admin created: ${value.email}`);
   return 0;
 };
 

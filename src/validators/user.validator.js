@@ -37,5 +37,16 @@ const address = {
   }),
 };
 
-module.exports = { updateMe, deactivateMe, address };
+const updateRole = {
+  body: Joi.object({
+      role: Joi.string().valid('user', 'admin', 'superadmin'),
+  }),
+};
 
+const updateStatus = {
+  body: Joi.object({
+    isActive: Joi.boolean().required(),
+  }),
+};
+
+module.exports = { updateMe, deactivateMe, address ,updateRole, updateStatus };

@@ -35,6 +35,8 @@ const fs = require('fs');
 const User = require('../models/user.model');
 const ApiError = require('../utils/ApiError');
 const { uploadDir } = require('../middlewares/upload.middleware');
+const { getPagination, buildMeta } = require('../utils/pagination');
+const { parseSort, escapeRegex } = require('../utils/queryHelpers');
 
 // Delete a picture from the folder using the path saved in the database
 const deleteOldAvatar = (avatarPath) => {
@@ -98,7 +100,10 @@ const deactivateMe = async (userId, password) => {
       throw new ApiError(400, 'You are the only active admin. Make another user an admin first');
     }
   }
-
+  // The main admin account cannot be deactivated
+  if (user.role === 'superadmin') {
+    throw new ApiError(400, 'The main admin account cannot be deactivated');
+  }
   // 3. Switch the account off and remove the refresh token
   await User.updateOne(
     { _id: user._id },
@@ -204,4 +209,90 @@ const setDefaultAddress = async (userId, addressId) => {
   return user.addresses;
 };
 
-module.exports = { updateMe, deactivateMe, getUser, getAddresses, addAddress, updateAddress, deleteAddress, setDefaultAddress };
+
+const getUsers = async (query) => {
+  // 1. Which page, and how many to skip
+  const { page, limit, skip } = getPagination(query);
+
+  // 2. Which order (only these fields are allowed for sorting)
+  const sort = parseSort(query.sort, ['createdAt', 'name', 'email']);
+
+  // 3. Build the filter step by step
+  const filter = {};
+
+  if (query.role) filter.role = query.role;
+  if (query.isActive !== undefined) filter.isActive = query.isActive;
+
+  if (query.search) {
+    const text = escapeRegex(query.search); // makes the typed text safe
+    filter.$or = [                           // "name matches OR email matches"
+      { name: { $regex: text, $options: 'i' } },   // 'i' means ignore capital letters
+      { email: { $regex: text, $options: 'i' } },
+    ];
+  }
+
+  // 4. Get the page of users AND the total count at the same time
+  // const [users, total] = await Promise.all([
+  //   User.find(filter).sort(sort).skip(skip).limit(limit),
+  //   User.countDocuments(filter),
+  // ]);
+
+
+  const users = await User.find(filter)
+  .sort(sort)
+  .skip(skip)
+  .limit(limit);
+
+const total = await User.countDocuments(filter);
+
+  return { users, meta: buildMeta(total, page, limit) };
+};
+
+const getUserById = (id) => getUser(id); // getUser already exists from the address lesson
+
+
+const updateUserRole = async (actor, userId, role) => {
+  if (String(actor._id) === String(userId)) {
+    throw new ApiError(400, 'You cannot change your own role');
+  }
+
+  const target = await User.findById(userId);
+  if (!target) throw new ApiError(404, 'User not found');
+
+  // Nobody can change the main admin
+  if (target.role === 'superadmin') {
+    throw new ApiError(403, 'The main admin cannot be changed');
+  }
+
+  target.role = role;
+  await target.save();
+
+  return target;
+};
+
+const updateUserStatus = async (actor, userId, isActive) => {
+  if (String(actor._id) === String(userId)) {
+    throw new ApiError(400, 'You cannot block or unblock your own account');
+  }
+
+  const target = await User.findById(userId);
+  if (!target) throw new ApiError(404, 'User not found');
+
+  // Nobody can block the main admin
+  if (target.role === 'superadmin') {
+    throw new ApiError(403, 'The main admin cannot be blocked');
+  }
+
+  // Only the main admin can block or unblock a sub-admin
+  if (target.role === 'admin' && actor.role !== 'superadmin') {
+    throw new ApiError(403, 'Only the main admin can block or unblock another admin');
+  }
+
+  const update = isActive
+    ? { $set: { isActive: true } }
+    : { $set: { isActive: false }, $unset: { refreshTokenHash: 1 } };
+
+  return User.findByIdAndUpdate(userId, update, { new: true });
+};
+
+module.exports = { updateMe, deactivateMe, getUser, getAddresses, addAddress, updateAddress, deleteAddress, setDefaultAddress, getUsers, getUserById ,updateUserRole, updateUserStatus};

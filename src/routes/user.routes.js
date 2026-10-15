@@ -50,4 +50,38 @@ router.patch(
   userController.setDefaultAddress
 );
 
+router.get(
+  '/',
+  protect,
+  restrictTo('admin', 'superadmin'),
+  validate(userValidator.listUsers),
+  userController.getUsers
+);
+
+router.get(
+  '/:id',
+  protect,
+  restrictTo('admin', 'superadmin'),
+  validate(commonValidator.idParam),
+  userController.getUserById
+);
+
+// Only the main admin can create or remove sub-admins
+router.patch(
+  '/:id/role',
+  protect,
+  restrictTo('superadmin'),
+  validate({ ...commonValidator.idParam, ...userValidator.updateRole }),
+  userController.updateUserRole
+);
+
+// Sub-admins may block normal users. The service blocks them from touching other admins
+router.patch(
+  '/:id/status',
+  protect,
+  restrictTo('admin', 'superadmin'),
+  validate({ ...commonValidator.idParam, ...userValidator.updateStatus }),
+  userController.updateUserStatus
+);
+
 module.exports = router;
